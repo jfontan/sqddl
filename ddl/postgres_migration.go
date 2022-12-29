@@ -264,7 +264,7 @@ func newPostgresMigration(srcCatalog, destCatalog *Catalog, dropObjects bool) po
 				if columnsAreDifferent {
 					// ALTER COLUMN.
 					alterTable.alterColumns = append(alterTable.alterColumns, [2]*Column{srcColumn, destColumn})
-					if !srcColumn.IsNotNull && destColumn.IsNotNull && !m.versionNums.LowerThan(12) {
+					if !srcColumn.IsNotNull && destColumn.IsNotNull && !m.versionNums.LowerThan(12) && false {
 						alterTable.validateNotNull = append(alterTable.validateNotNull, destColumn)
 					}
 				}
@@ -520,7 +520,7 @@ func (m *postgresMigration) sql(prefix string) (filenames []string, bufs []*byte
 				if buf.Len() > 0 {
 					buf.WriteString("\n")
 				}
-				buf.WriteString("ALTER TABLE " + tableName + " ALTER COLUMN " + columnName + " TYPE " + destColumn.ColumnType)
+				buf.WriteString("ALTER TABLE \"" + tableName + "\" ALTER COLUMN \"" + columnName + "\" TYPE " + destColumn.ColumnType)
 				if destColumn.CollationName != "" && destColumn.CollationName != m.defaultCollation {
 					buf.WriteString(` COLLATE "` + sq.EscapeQuote(destColumn.CollationName, '"') + `"`)
 				}
@@ -566,7 +566,7 @@ func (m *postgresMigration) sql(prefix string) (filenames []string, bufs []*byte
 				if buf.Len() > 0 {
 					buf.WriteString("\n")
 				}
-				if m.versionNums.LowerThan(12) {
+				if m.versionNums.LowerThan(12) || true {
 					warnings = append(warnings, fmt.Sprintf("%s: setting NOT NULL on column %q is unsafe for large tables. Upgrade to Postgres 12+ to avoid this issue", tableName, columnName))
 					buf.WriteString("ALTER TABLE " + tableName + " ALTER COLUMN " + columnName + " SET NOT NULL;\n")
 				} else {
@@ -579,12 +579,12 @@ func (m *postgresMigration) sql(prefix string) (filenames []string, bufs []*byte
 				if buf.Len() > 0 {
 					buf.WriteString("\n")
 				}
-				buf.WriteString("ALTER TABLE " + tableName + " ALTER COLUMN " + columnName + " DROP IDENTITY;\n")
+				buf.WriteString("ALTER TABLE \"" + tableName + "\" ALTER COLUMN \"" + columnName + "\" DROP IDENTITY;\n")
 			} else if srcColumn.ColumnIdentity == "" && destColumn.ColumnIdentity != "" {
 				if buf.Len() > 0 {
 					buf.WriteString("\n")
 				}
-				buf.WriteString("ALTER TABLE " + tableName + " ALTER COLUMN " + columnName + " ADD " + destColumn.ColumnIdentity + ";\n")
+				buf.WriteString("ALTER TABLE \"" + tableName + "\" ALTER COLUMN \"" + columnName + "\" ADD \"" + destColumn.ColumnIdentity + "\";\n")
 			}
 		}
 		// ALTER CONSTRAINT.
@@ -607,7 +607,7 @@ func (m *postgresMigration) sql(prefix string) (filenames []string, bufs []*byte
 		}
 
 		// VALIDATE NOT NULL CHECK.
-		if len(alterTable.validateNotNull) > 0 {
+		if len(alterTable.validateNotNull) > 0 && false {
 			n++
 			// ${prefix}_${n}_validate_${table}_not_null.tx.sql
 			filenames = append(filenames, prefix+"_"+fmt.Sprintf("%02d", n)+"_validate_"+name+"_not_null.tx.sql")
